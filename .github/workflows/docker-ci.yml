@@ -1,0 +1,61 @@
+
+name: DeployCraft Docker CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker-service/**'
+      - '.github/workflows/docker-ci.yml'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docker-service/**'
+      - '.github/workflows/docker-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build-and-test:
+    name: Build and Test Docker Application
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t deploycraft-web:${{ github.sha }} \
+            ./docker-service
+
+      - name: Run Docker Container
+        run: |
+          docker run -d \
+            -p 8080:80 \
+            --name deploycraft-container \
+            deploycraft-web:${{ github.sha }}
+
+      - name: Test Application
+        run: |
+          for i in {1..10}; do
+            if curl -fsS http://localhost:8080 -o response.html; then
+              break
+            fi
+            sleep 2
+          done
+
+          grep -q "DeployCraft" response.html
+
+          echo "Docker application test passed!"
+
+      - name: Cleanup Container
+        if: always()
+        run: |
+          docker rm -f deploycraft-container || true
