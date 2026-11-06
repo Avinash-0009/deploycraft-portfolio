@@ -34,7 +34,7 @@ docker-service/
 ### 1. Clone the repository
 
 ```bash
-git clone YOUR_REPOSITORY_URL
+git clone https://github.com/Avinash-0009/deploycraft-portfolio
 cd deploycraft-portfolio/docker-service
 ```
 
